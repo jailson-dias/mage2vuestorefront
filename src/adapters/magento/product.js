@@ -161,6 +161,7 @@ class ProductAdapter extends AbstractMagentoAdapter {
   getProductSourceData(context) {
     let query = this.getFilterQuery(context);
     let searchCriteria = '&searchCriteria[currentPage]=%d&searchCriteria[pageSize]=%d';
+    let storeCode = process.env.STORE_CODE || ''
 
     if(this.config.product && JSON.parse(this.config.product.excludeDisabledProducts)) {
       searchCriteria += '&searchCriteria[filterGroups][0][filters][0][field]=status'+
@@ -183,7 +184,7 @@ class ProductAdapter extends AbstractMagentoAdapter {
       this.configurable_sync = context.configurable_sync;
 
     if (context.for_total_count) { // get total counts
-      return this.api.products.list(util.format(searchCriteria, 1, 1)).catch((err) => {
+      return this.api.products.list(util.format(searchCriteria, 1, 1), storeCode).catch((err) => {
         throw new Error(err);
       });
     } else if (context.page && context.page_size) {
@@ -196,18 +197,18 @@ class ProductAdapter extends AbstractMagentoAdapter {
 
       logger.debug(`Using specific paging options from adapter context: ${context.page} / ${context.page_size}`);
 
-      return this.api.products.list(util.format(searchCriteria, context.page, context.page_size) + (query ? '&' + query : '')).catch((err) => {
+      return this.api.products.list(util.format(searchCriteria, context.page, context.page_size) + (query ? '&' + query : ''), storeCode).catch((err) => {
         throw new Error(err); 
       });
 
     } else if (this.use_paging) {
       this.is_federated = false; // federated execution is not compliant with paging
       logger.debug(util.format(searchCriteria, this.page, this.page_size) + (query ? '&' + query : ''));
-      return this.api.products.list(util.format(searchCriteria, this.page, this.page_size) + (query ? '&' + query : '')).catch((err) => {
+      return this.api.products.list(util.format(searchCriteria, this.page, this.page_size) + (query ? '&' + query : ''), storeCode).catch((err) => {
         throw new Error(err);
       });
     } else {
-      return this.api.products.list().catch((err) => {
+      return this.api.products.list(null, storeCode).catch((err) => {
         throw new Error(err);
       });
     }
